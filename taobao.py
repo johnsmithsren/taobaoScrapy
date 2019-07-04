@@ -16,7 +16,7 @@ class taobaoModel(object):
         base_path = os.path.dirname(os.path.abspath(__file__))
         config = {}
         with open(base_path + "/config.yaml") as f:
-            config = yaml.load(f)
+            config = yaml.load(f,Loader=yaml.BaseLoader)
         driverPath = config['chromePath']
         weiboName = config['weiboUsername']
         weiboPwd = config['weiboPassword']
@@ -43,15 +43,33 @@ class taobaoModel(object):
         return Content
 
     def buy(self):
-        self.browser.get("https://cart.taobao.com/cart.htm")
-        if self.browser.find_element_by_id("J_SelectAll1"):
-            self.browser.find_element_by_id("J_SelectAll1").click()
-        time.sleep(2)
-        self.browser.find_element_by_link_text("结 算").click();
-        time.sleep(10)
         self.browser.find_element_by_link_text("提交订单").click();
-        time.sleep(10)
         return
+
+    def prepare(self):
+        self.browser.get("https://cart.taobao.com/cart.htm")
+        time.sleep(10)
+        self.browser.find_element_by_id("J_SelectAll1").click()
+        time.sleep(10)
+        self.browser.find_element_by_link_text("结 算").click();
+
+    def buyOnTime(self,starttime):
+        startTime = starttime
+        while True:
+            now = time.time()
+            print(startTime-now)
+            if (startTime-now)<=0:
+                while True:
+                    try:
+                        now = time.time()
+                        self.buy()
+                        if(now - startTime)>10:
+                            break
+                    except:
+                        time.sleep(1)
+            time.sleep(0.1)
+            if (now - startTime) > 10:
+                break
 
     def getUserinfo(self):
         self.browser.get("https://rate.taobao.com/myRate.htm")
@@ -61,5 +79,6 @@ class taobaoModel(object):
 
 if __name__ == '__main__':
     taobaoUserSession = taobaoModel()
-    taobaoUserSession.buy()
-    taobaoUserSession.getUserinfo()
+    taobaoUserSession.prepare()
+    start_time = time.time()   + 10
+    taobaoUserSession.buyOnTime(start_time)
